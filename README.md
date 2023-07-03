@@ -1,6 +1,9 @@
 # ParkEase
 website for parking system service
 
+database name : vehicle-parking-db
+
+
 admin detail :
 
 username - adam
