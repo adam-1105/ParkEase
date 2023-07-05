@@ -8,7 +8,6 @@ if (!isset($_SESSION['username'])) {
     exit();
 }
 
-// Fetch the already booked slots from the database
 $bookedSlots = array();
 $stmt = $conn->prepare("SELECT ParkingNumber FROM vehicle_info");
 if ($stmt->execute()) {
@@ -41,7 +40,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $sanitizedData[$field] = $_POST[$field];
         }
     }
-
     // Calculate parking charges
     $hours = (strtotime($sanitizedData["out_time"]) - strtotime($sanitizedData["in_time"])) / 3600;
     $baseRate = 4.00; // Base rate per hour
@@ -110,6 +108,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             color: #fff;
             padding: 20px;
             text-align: center;
+			display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         .booking-card-header h4 {
@@ -207,6 +208,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <div class="card booking-card">
                     <div class="card-header booking-card-header">
                         <h4>Booking</h4>
+						<div>
+                            <button type="button" class="btn btn-primary" onclick="redirect()">Check Out</button>
+                        </div>
                     </div>
                     <div class="card-body booking-card-body">
                         <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post">
@@ -294,8 +298,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                 </script>
                                 <div class="col-md-12">
                                     <div class="form-group text-center">
-										<button type="button" class="btn btn-secondary" onclick="redirect()">Check Out</button>
-                                        <button type="button" class="btn btn-secondary" onclick="openModel()">3D Model</button>
+                                        <button type="button" class="btn btn-primary" onclick="openModel()">3D Model</button>
                                         <button type="button" class="btn btn-primary" onclick="showImage()">Parking Layout</button>
                                         <button type="submit" class="btn btn-booking" name="submit">Book Now</button>
                                     </div>
