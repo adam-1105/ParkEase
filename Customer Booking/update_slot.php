@@ -49,7 +49,7 @@ if (isset($_POST['checkout'])) {
 
     if ($stmt->execute()) {
         $checkoutSuccess = true;
-		header("Location: ..\..\stripe\checkout.php?parkingCharge=" . urlencode($parkingCharge));
+        header("Location: ..\..\stripe\checkout.php?parkingCharge=" . urlencode($parkingCharge));
 
         exit();
     } else {
@@ -110,6 +110,8 @@ if (isset($_POST['checkout'])) {
             </div>
         </div>
 
+        <?php if (isset($_POST['search'])) { ?>
+        <!-- Display the table only when the search button is clicked and the search results are available -->
         <div class="card">
             <div class="card-body">
                 <table class="table">
@@ -165,11 +167,13 @@ if (isset($_POST['checkout'])) {
                 </table>
             </div>
         </div>
+        <?php } ?>
+
     </div>
-	
-	<script>
-    var price = <?php echo isset($_POST['parkingCharge']) ? json_encode($_POST['parkingCharge']) : 0; ?>;
-</script>
+
+    <script>
+        var price = <?php echo isset($_POST['parkingCharge']) ? json_encode($_POST['parkingCharge']) : 0; ?>;
+    </script>
 </body>
 
 </html>
