@@ -18,8 +18,8 @@ if ($stmt->execute()) {
             $bookedSlots[] = $parkingNumber;
         }
     }
+    $stmt->close();
 }
-$stmt->close();
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $fields = [
@@ -40,38 +40,39 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $sanitizedData[$field] = $_POST[$field];
         }
     }
-    // Calculate parking charges
-    $hours = (strtotime($sanitizedData["out_time"]) - strtotime($sanitizedData["in_time"])) / 3600;
-    $baseRate = 4.00; // Base rate per hour
-    $discountedRate = $baseRate * 0.8; // Discounted rate per hour (20% off)
-    $maxRegularHours = 5; // Maximum hours for regular rate
 
-    $rate = $baseRate;
-    if (in_array($sanitizedData["vehicle_category"], ["A", "VIP"])) {
-        $rate = ($hours <= $maxRegularHours) ? $baseRate * $hours : ($baseRate * $maxRegularHours) + ($discountedRate * ($hours - $maxRegularHours));
-    } elseif (in_array($sanitizedData["vehicle_category"], ["C", "OKU"])) {
-        $rate = ($hours <= $maxRegularHours) ? $baseRate * $hours * 0.8 : ($baseRate * $maxRegularHours * 0.8) + ($discountedRate * ($hours - $maxRegularHours) * 0.8);
+    $inTime = new DateTime($sanitizedData['in_time']);
+    $outTime = new DateTime($sanitizedData['out_time']);
+    $duration = $outTime->diff($inTime);
+    $hours = $duration->h + ($duration->days * 24);
+
+    // Function to calculate the parking charge based on the vehicle category and hours
+    function calculateParkingCharge($vehicleCategory, $hours)
+    {
+        if ($vehicleCategory === 'A') {
+            return 6 * $hours;
+        } elseif ($vehicleCategory === 'C') {
+            return 4 * $hours * 0.8;
+        } else {
+            return 4 * $hours;
+        }
     }
 
+    $parkingCharge = calculateParkingCharge($sanitizedData['vehicle_category'], $hours);
     $stmt = $conn->prepare("INSERT INTO vehicle_info (ParkingNumber, VehicleCategory, VehicleCompanyname, RegistrationNumber, OwnerName, OwnerContactNumber, InTime, OutTime, Remark, ParkingCharge) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-    if (!$stmt) {
-        die("Error in preparing the statement: " . $conn->error);
-    }
-
-    // Bind the parameters dynamically
-    $bindParams = array_merge(["sssssssssd"], array_values($sanitizedData), [$rate]);
+    $bindParams = array_merge(["sssssssssd"], array_values($sanitizedData), [$parkingCharge]);
     $stmt->bind_param(...$bindParams);
 
-    // Execute the query
     if ($stmt->execute()) {
-        header("Location: success_page.php"); // Redirect to payment.html
-        exit(); // Terminate script execution after redirect
+        $stmt->close();
+        $conn->close();
+        header("Location: success_page.php");
+        exit();
     } else {
         $error = "Error occurred while booking. Please try again. Error: " . $stmt->error;
+        $stmt->close();
+        $conn->close();
     }
-
-    $stmt->close(); // Close the statement
-    $conn->close(); // Close the connection
 }
 ?>
 
@@ -93,7 +94,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background-color: transparent;
+            background-color:transparent;
         }
 
         .booking-card {
@@ -108,7 +109,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             color: #fff;
             padding: 20px;
             text-align: center;
-			display: flex;
+            display: flex;
             justify-content: space-between;
             align-items: center;
         }
@@ -208,21 +209,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <div class="card booking-card">
                     <div class="card-header booking-card-header">
                         <h4>Booking</h4>
-						<div>
+                        <div>
                             <button type="button" class="btn btn-primary" onclick="redirect()">Check Out</button>
                         </div>
                     </div>
                     <div class="card-body booking-card-body">
                         <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post">
                             <div class="row">
-                                <!-- First Container - Left Side -->
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label for="owner_name">Owner Name</label>
                                         <input type="text" name="owner_name" class="form-control" required>
                                     </div>
                                     <div class="form-group">
-                                        <label for="owner_contact_number">Owner Contact Number(without '-')</label>
+                                        <label for="owner_contact_number">Owner Contact Number (without '-')</label>
                                         <input type="text" name="owner_contact_number" class="form-control" required>
                                     </div>
                                     <div class="form-group">
@@ -234,9 +234,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                         <input type="text" name="registration_number" class="form-control" required>
                                     </div>
                                 </div>
-
-                                <!-- Second Container - Right Side -->
                                 <div class="col-md-6">
+								<div class="form-group">
+                                        <label for="vehicle_category">Vehicle Category</label>
+                                        <select name="vehicle_category" class="form-control" required>
+                                            <option value="">Select Vehicle Category</option>
+                                            <option value="A">A</option>
+                                            <option value="B">B</option>
+											<option value="C">C</option>
+                                        </select>
+                                    </div>
                                     <div class="form-group">
                                         <label for="parking_number">Parking Number</label>
                                         <select name="parking_number" class="form-control" required>
@@ -250,7 +257,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                                 <?php endfor; ?>
                                             </optgroup>
                                             <optgroup label="B - REGULAR">
-                                                <?php for ($i = 1; $i <= 84; $i++) : ?>
+                                                <?php for ($i = 1; $i <= 36; $i++) : ?>
                                                     <?php $slot = "B$i"; ?>
                                                     <option value="<?php echo $slot; ?>" <?php echo in_array($slot, $bookedSlots) ? 'disabled' : ''; ?>>
                                                         <?php echo $slot; ?>
@@ -268,15 +275,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                         </select>
                                     </div>
                                     <div class="form-group">
-                                        <label for="vehicle_category">Vehicle Category</label>
-                                        <select name="vehicle_category" class="form-control" required>
-                                            <option value="">Select Vehicle Category</option>
-                                            <option value="A">A - VIP</option>
-                                            <option value="B">B - REGULAR</option>
-                                            <option value="C">C - OKU</option>
-                                        </select>
-                                    </div>
-                                    <div class="form-group">
                                         <label for="in_time">In Time</label>
                                         <input type="datetime-local" name="in_time" class="form-control" required>
                                     </div>
@@ -290,7 +288,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                     </div>
                                 </div>
                             </div>
-                            <div class="row">
+							<div class="row">
                                 <script>
                                     function openModel() {
                                         window.open('model.html', '_blank');
@@ -300,21 +298,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                     <div class="form-group text-center">
                                         <button type="button" class="btn btn-primary" onclick="openModel()">3D Model</button>
                                         <button type="button" class="btn btn-primary" onclick="showImage()">Parking Layout</button>
-                                        <button type="submit" class="btn btn-booking" name="submit">Book Now</button>
+										<button type="submit" class="btn btn-booking">Book Parking</button>
                                     </div>
                                 </div>
                             </div>
                         </form>
                     </div>
-                    <?php if (isset($success)) : ?>
-                        <div class="card-footer booking-card-footer">
-                            <p><?php echo $success; ?></p>
-                        </div>
-                    <?php elseif (isset($error)) : ?>
-                        <div class="card-footer booking-card-footer">
-                            <p><?php echo $error; ?></p>
-                        </div>
-                    <?php endif; ?>
                 </div>
             </div>
         </div>
