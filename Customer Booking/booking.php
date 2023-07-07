@@ -7,6 +7,10 @@ if (!isset($_SESSION['username'])) {
     header("Location: login.php");
     exit();
 }
+$username = $_SESSION['username'];
+$phone = $_SESSION['phone'];
+$phone = str_pad($phone, strlen($phone) + 1, '0', STR_PAD_LEFT);
+
 
 $bookedSlots = array();
 $stmt = $conn->prepare("SELECT ParkingNumber FROM vehicle_info");
@@ -186,12 +190,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         .close-button {
             position: absolute;
-            top: 10px;
-            right: 10px;
+            top: 50px;
+            right: 100px;
             background: none;
             border: none;
             color: #fff;
-            font-size: 24px;
+            font-size: 50px;
             cursor: pointer;
             opacity: 0.8;
         }
@@ -218,12 +222,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label for="owner_name">Owner Name</label>
-                                        <input type="text" name="owner_name" class="form-control" required>
+										
+											<?php
+												echo '<label for="owner_name">Owner Name</label>';
+												echo '<input type="text" name="owner_name" class="form-control" value="' .$username. '" required readonly>';
+											?>
                                     </div>
                                     <div class="form-group">
-                                        <label for="owner_contact_number">Owner Contact Number (without '-')</label>
-                                        <input type="text" name="owner_contact_number" class="form-control" required>
+											<label for="owner_contact_number">Owner Contact Number</label>
+											<?php
+												echo '<input type="text" name="owner_contact_number" class="form-control" value="'.$phone.'" required readonly>';
+											?>
                                     </div>
                                     <div class="form-group">
                                         <label for="vehicle_company_name">Vehicle Company Name</label>
