@@ -70,9 +70,11 @@ $conn->close();
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Custom CSS -->
     <style>
-        body {
-            background-color: #212529;
-            font-family: 'Poppins', sans-serif;
+		body {
+            background-image: url("parking 1.jpg");
+            background-repeat: no-repeat;
+            background-size: cover;
+			font-family: 'Poppins', sans-serif;
             color: #ffffff;
         }
 
