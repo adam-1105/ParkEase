@@ -36,6 +36,11 @@
 			margin-left: -100px;
 		}
 
+		.admin-button {
+			font-size: 12px;
+			padding: 5px 10px;
+			margin-top: 10px;
+		}
 	</style>
 </head>
 <body>
@@ -77,6 +82,7 @@
 					<button class="ghost" id="register">register
 						<i class="1ni 1ni-arrow-right register"></i>
 					</button>
+					  <button onclick="redirectToAdminPage()" class="admin-button">Admin</button>
 				</div>
 			</div>
 		</div>			
@@ -94,6 +100,10 @@
 				passwordInput.type = "password";
 				toggleButton.textContent = "Show";
 			}
+		}
+
+		function redirectToAdminPage() {
+			window.location.href = "/vehicle-parking";
 		}
 	</script>
 </body>
