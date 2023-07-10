@@ -1,6 +1,8 @@
 # ParkEase
 website for parking system service
 
+link website : http://parkease.42web.io/
+
 database name : vehicle-parking-db
 
 
@@ -10,6 +12,5 @@ username - adam
 
 password - adam123
 
-use same admin detail to view "about us" page.
 
 main php file will be in folder "Customer Booking" for customer.
