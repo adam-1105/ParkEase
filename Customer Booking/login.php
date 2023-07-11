@@ -44,7 +44,7 @@ if ($result && $result->num_rows > 0) {
     if (password_verify($password, $row['customer_password'])) {
         $_SESSION['username'] = $username;
         $_SESSION['phone'] = $row['customer_phone'];
-        header("Location: ../booking.php");
+        header("Location: booking.php");
         exit();
     }
 }
