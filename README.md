@@ -5,6 +5,8 @@ link website : http://parkease.42web.io/
 
 database name : vehicle-parking-db
 
+folder name : vehicle-parking
+
 
 admin detail :
 
